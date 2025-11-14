@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SpringNativeSettings">
+    <option name="linkedExternalProjectsSettings">
+      <NativeProjectSettings>
+        <option name="externalProjectPath" value="$PROJECT_DIR$/patient-service/src/main/java/com/pcrypto/patientservice/PatientServiceApplication.java" />
+        <option name="qualifiedMainClassName" value="com.pcrypto.patientservice.PatientServiceApplication" />
+        <option name="runConfigurationName" value="PatientServiceApplication" />
+        <option name="runConfigurationType" value="APPLICATION" />
+      </NativeProjectSettings>
+    </option>
+  </component>
+</project>

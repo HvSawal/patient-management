@@ -1,0 +1,13 @@
+### POST request - Create new patient
+POST http://localhost:5000/patients
+Content-type: application/json
+
+{
+    "firstName" : "Jake",
+    "lastName" : "Bake",
+    "email" : "jake.bake@example.com",
+    "address" : "123 Main Street",
+    "dateOfBirth" : "1995-09-09",
+    "registeredDate" : "2025-10-10"
+}
+###
