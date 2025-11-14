@@ -29,10 +29,17 @@ public class PatientController {
     private final PatientService patientService;
 
     @GetMapping
-    public ResponseEntity<List<PatientResponseDTO>> getPatients() {
+    public ResponseEntity<List<PatientResponseDTO>> getAllPatients() {
         List<PatientResponseDTO> patients = patientService.getPatients();
 
         return ResponseEntity.ok().body(patients);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PatientResponseDTO> getPatient(@PathVariable UUID id) {
+        PatientResponseDTO patient = patientService.getPatientById(id);
+
+        return ResponseEntity.ok().body(patient);
     }
 
     @PostMapping

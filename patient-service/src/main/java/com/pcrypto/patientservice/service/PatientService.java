@@ -28,6 +28,13 @@ public class PatientService {
                 .toList();
     }
 
+    public PatientResponseDTO getPatientById(UUID id) {
+        Patient patient = patientRepository.findById(id)
+                .orElseThrow(() -> new PatientNotFoundException("No patient found with ID: " + id));
+
+        return PatientMapper.toDTO(patient);
+    }
+
     public PatientResponseDTO createPatient(PatientRequestDTO patientRequestDTO) {
 
         if (patientRepository.existsByEmail(patientRequestDTO.getEmail())) {
