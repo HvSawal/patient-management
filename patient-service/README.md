@@ -29,7 +29,7 @@ A typical `Patient` entity contains:
 | `dateOfBirth`  | LocaleDate | Patient’s date of birth              |
 | `registeredDate` | LocaleDate       | Date when the patient registered     |
 
-> ℹ️ The table and some seed data can be initialized via `schema.sql` / `data.sql` when running locally.
+> ℹ️ The table and some seed data can be initialized via `data.sql` when running locally.
 
 ---
 
@@ -44,6 +44,24 @@ A typical `Patient` entity contains:
 | `GET`    | `/api/patients`           | List all patients              |
 | `PUT`    | `/api/patients/{id}`      | Update an existing patient     |
 | `DELETE` | `/api/patients/{id}`      | Delete a patient by ID         |
+
+---
+
+## 📘 API Documentation (Swagger / OpenAPI)
+
+Once the application is running, you can explore and test the APIs via Swagger UI:
+
+- Swagger UI (common defaults – update based on your setup):
+    - `http://localhost:8080/swagger-ui.html`
+    - or `http://localhost:8080/swagger-ui/index.html`
+
+- OpenAPI JSON:
+    - `http://localhost:8080/v3/api-docs`
+
+Use this UI to:
+- View all available endpoints
+- Inspect request/response models
+- Execute API calls directly from the browser
 
 ---
 
@@ -96,4 +114,74 @@ curl -X PUT http://localhost:8080/api/patients/123e4567-e89b-12d3-a456-426614174
 curl -X DELETE \
   http://localhost:8080/api/patients/123e4567-e89b-12d3-a456-426614174000
 ```
-**NOTE: Replace the above ID numbers with your specific UUID
+**NOTE: Replace the above ```ID``` numbers with your specific UUID
+
+---
+
+## 🏃 Running the Service
+
+### From the Module Directory
+
+```bash
+cd patient-service
+mvn spring-boot:run
+```
+
+By default, the application starts on **`http://localhost:8080`**.
+
+### Using the Built JAR
+
+```bash
+mvn clean package
+java -jar target/patient-service-*.jar
+```
+
+---
+
+## ⚙️ Configuration
+
+Configuration is managed via `application.properties` in `src/main/resources`.
+
+Common properties:
+
+- `server.port` – HTTP port (default: `8080`)
+- `spring.datasource.*` – Database connection details
+- `spring.jpa.*` – JPA & Hibernate settings
+- Swagger / OpenAPI configuration
+
+For local development, you can use:
+- `data.sql` for inserting initial patient records
+
+---
+
+## 🧪 Testing
+
+Run tests with:
+
+```bash
+mvn test
+```
+
+Planned enhancements:
+
+- REST-level integration tests
+- Database-backed integration tests (e.g., PostgreSQL via Docker)
+- Contract tests once other services (billing, auth, etc.) are added
+
+---
+
+## 🔭 Future Enhancements (Service-Level)
+
+At the **patient-service** level, future improvements may include:
+
+- Richer request validation with `jakarta.validation`
+- Standardized error handling / problem details
+- Extended OpenAPI metadata (tags, examples, versioning)
+- Security integration with a dedicated auth/gateway layer
+- Improved logging, metrics, and tracing
+
+---
+
+## 🔗 Related
+
+- Parent project: [`patient-management`](../README.md)
