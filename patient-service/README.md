@@ -7,11 +7,14 @@ It currently exposes **CRUD operations** for patient entities and acts as the fo
 
 ## ✨ Features
 
-- Create new patients
-- Retrieve a single patient by ID
-- List all patients
-- Update existing patients
-- Delete patients by ID
+- **CRUD operations:**
+  - Create new patients
+  - Retrieve a single patient by ID
+  - List all patients
+  - Update existing patients
+  - Delete patients by ID
+- **Interactive API documentation via Swagger / OpenAPI**
+- **Dockerized runtime with PostgreSQL database**
 
 ---
 
@@ -35,7 +38,7 @@ A typical `Patient` entity contains:
 
 ## 🔗 REST API Overview
 
-> **Base URL:** `http://localhost:8080/api/patients`
+> **Base URL:** `http://localhost:4000/api/patients`
 
 | Method   | Endpoint                  | Description                    |
 |----------|---------------------------|--------------------------------|
@@ -52,11 +55,11 @@ A typical `Patient` entity contains:
 Once the application is running, you can explore and test the APIs via Swagger UI:
 
 - Swagger UI (common defaults – update based on your setup):
-    - `http://localhost:8080/swagger-ui.html`
-    - or `http://localhost:8080/swagger-ui/index.html`
+    - `http://localhost:4000/swagger-ui.html`
+    - or `http://localhost:4000/swagger-ui/index.html`
 
 - OpenAPI JSON:
-    - `http://localhost:8080/v3/api-docs`
+    - `http://localhost:4000/v3/api-docs`
 
 Use this UI to:
 - View all available endpoints
@@ -70,7 +73,7 @@ Use this UI to:
 ### Example 1 : Create Patient
 
 ```bash
-curl -X POST http://localhost:8080/api/patients \
+curl -X POST http://localhost:4000/api/patients \
   -H "Content-Type: application/json" \
   -d '{
     "firstName": "John",
@@ -85,19 +88,19 @@ curl -X POST http://localhost:8080/api/patients \
 ### Example 2 : Get All Patient
 
 ```bash
-curl -X GET http://localhost:8080/api/patients
+curl -X GET http://localhost:4000/api/patients
 ```
 
 ### Example 3 : Get Patient by ID
 
 ```bash
-curl -X GET http://localhost:8080/api/patients/123e4567-e89b-12d3-a456-426614174000
+curl -X GET http://localhost:4000/api/patients/123e4567-e89b-12d3-a456-426614174000
 ```
 
 ### Example 4 : Update Patient
 
 ```bash
-curl -X PUT http://localhost:8080/api/patients/123e4567-e89b-12d3-a456-426614174000 \
+curl -X PUT http://localhost:4000/api/patients/123e4567-e89b-12d3-a456-426614174000 \
   -H "Content-Type: application/json" \
   -d '{
     "firstName": "Johnathan",
@@ -111,14 +114,91 @@ curl -X PUT http://localhost:8080/api/patients/123e4567-e89b-12d3-a456-426614174
 ### Example 5 : Delete Patient by ID
 
 ```bash
-curl -X DELETE \
-  http://localhost:8080/api/patients/123e4567-e89b-12d3-a456-426614174000
+curl -X DELETE http://localhost:4000/api/patients/123e4567-e89b-12d3-a456-426614174000
 ```
 **NOTE: Replace the above ```ID``` numbers with your specific UUID
 
 ---
 
-## 🏃 Running the Service
+## 🐳 Docker Setup (IntelliJ)
+
+This project includes a Dockerized setup for the **patient-service** and a **PostgreSQL** database.  
+The examples below assume you are using **IntelliJ IDEA** with Docker run configurations.
+
+> 💡 **IntelliJ Community Edition:**  
+> You need to install the **“[Docker](https://www.jetbrains.com/help/idea/docker.html)”** plugin from the JetBrains Marketplace to use Docker run configurations.
+
+### 1. Dockerfile Build Configuration (patient-service)
+
+[Dockerfile](https://github.com/HvSawal/patient-management/blob/main/patient-service/Dockerfile) (simplified description):
+
+- Multi-stage build using `maven:3.9.9-eclipse-temurin-21` as builder
+- Builds the jar with `mvn clean package`
+- Uses `eclipse-temurin:21-jdk` as the runtime image
+- Copies the built jar to `/app/app.jar`
+- Exposes port `4000`
+- Entrypoint: `java -jar app.jar`
+
+**IntelliJ Docker run configuration:**
+```
+- Type: Dockerfile
+- Dockerfile: this module’s `Dockerfile`
+- Container name: `patient-service`
+- Bind ports: `4000:4000`
+
+- Environment variables:
+  SPRING_DATASOURCE_PASSWORD=password
+  SPRING_DATASOURCE_URL=jdbc:postgresql://patient-service-db:5432/db
+  SPRING_DATASOURCE_USERNAME=admin_user
+  SPRING_JPA_HIBERNATE_DDL_AUTO=update
+  SPRING_SQL_INIT_MODE=always
+
+- Run options: --network internal
+```
+
+> The `--network internal` ensures the application container can reach the database container via the hostname `patient-service-db`.
+
+### 2. PostgreSQL Database Configuration (patient-service-db)
+
+Create a second Docker run configuration for the database using the official PostgreSQL image.
+
+**IntelliJ Docker run configuration:**
+```
+- Type: Image (or Docker Image)
+- Image ID or name: `postgres:17.7`
+- Container name: `patient-service-db`
+- Bind ports: `5000:5432`  
+  (Allows you to connect from the host via `localhost:5000`, while the container listens on `5432`.)
+- Bind mounts:
+  {PROJECT_DIRECTORY}\db_volumnes\patient-service-db:/var/lib/postgresql/data
+
+  (Adjust the path as needed for your environment.)
+
+- Environment variables:
+  POSTGRES_USER=admin_user
+  POSTGRES_PASSWORD=password
+  POSTGRES_DB=db
+
+- Run options: --network internal
+```
+
+> Both containers (`patient-service` and `patient-service-db`) share the same `internal` Docker network so that the application can use `jdbc:postgresql://patient-service-db:5432/db` as its datasource URL.
+
+### 3. Startup Order
+
+1. **Start the PostgreSQL container** (`patient-service-db`) first.
+2. Once the DB container is healthy and running, **start the patient-service container**.
+
+After both are running:
+
+- API base URL in Docker: `http://localhost:4000/api/patients`
+- Swagger UI in Docker: `http://localhost:4000/swagger-ui.html`
+
+---
+
+## 🏃 Running the Service Without Docker
+
+If you want to run the service directly on your machine:
 
 ### From the Module Directory
 
@@ -127,7 +207,7 @@ cd patient-service
 mvn spring-boot:run
 ```
 
-By default, the application starts on **`http://localhost:8080`**.
+By default, the application starts on **`http://localhost:4000`**.
 
 ### Using the Built JAR
 
@@ -140,12 +220,12 @@ java -jar target/patient-service-*.jar
 
 ## ⚙️ Configuration
 
-Configuration is managed via `application.properties` in `src/main/resources`.
+Configuration is managed via [`application.properties`](https://github.com/HvSawal/patient-management/blob/main/patient-service/src/main/resources/application.properties).
 
 Common properties:
 
-- `server.port` – HTTP port (default: `8080`)
-- `spring.datasource.*` – Database connection details
+- `server.port` – HTTP port (default: `4000`)
+- `spring.datasource.*` – Database connection details (overridden by Docker env vars in containers, check the commented section in application.properties)
 - `spring.jpa.*` – JPA & Hibernate settings
 - Swagger / OpenAPI configuration
 
