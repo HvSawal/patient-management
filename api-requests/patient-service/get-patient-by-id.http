@@ -1,4 +1,4 @@
 ### GET request - retrieve patient by id
-GET http://localhost:5000/patients/{id}
+GET http://localhost:4000/patients/{id}
 
 ###
