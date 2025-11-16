@@ -4,6 +4,7 @@ import com.pcrypto.patientservice.dto.PatientRequestDTO;
 import com.pcrypto.patientservice.dto.PatientResponseDTO;
 import com.pcrypto.patientservice.exception.EmailAlreadyExistsException;
 import com.pcrypto.patientservice.exception.PatientNotFoundException;
+import com.pcrypto.patientservice.grpc.BillingServiceGrpcClient;
 import com.pcrypto.patientservice.mapper.PatientMapper;
 import com.pcrypto.patientservice.model.Patient;
 import com.pcrypto.patientservice.repository.PatientRepository;
@@ -18,7 +19,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class PatientService {
 
-    private PatientRepository patientRepository;
+    private final PatientRepository patientRepository;
+    private final BillingServiceGrpcClient billingServiceGrpcClient;
 
     public List<PatientResponseDTO> getPatients() {
         List<Patient> patients = patientRepository.findAll();
@@ -42,6 +44,8 @@ public class PatientService {
                     patientRequestDTO.getEmail());
         }
         Patient newPatient = patientRepository.save(PatientMapper.toModel(patientRequestDTO));
+        billingServiceGrpcClient.createBillingAccount(newPatient.getId().toString(), newPatient.getFirstName() + " " + newPatient.getLastName(), newPatient.getEmail());
+
 
         return PatientMapper.toDTO(newPatient);
     }
