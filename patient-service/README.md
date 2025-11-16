@@ -13,6 +13,8 @@ It currently exposes **CRUD operations** for patient entities and acts as the fo
   - List all patients
   - Update existing patients
   - Delete patients by ID
+- **Integration with Billing Service via gRPC:**
+  - On patient creation, a gRPC call is made to `billing-service` to create a corresponding billing account.
 - **Interactive API documentation via Swagger / OpenAPI**
 - **Dockerized runtime with PostgreSQL database**
 
@@ -119,6 +121,28 @@ curl -X DELETE http://localhost:4000/api/patients/123e4567-e89b-12d3-a456-426614
 **NOTE: Replace the above ```ID``` numbers with your specific UUID
 
 ---
+## 🤝 Integration with Billing Service (gRPC)
+
+The **Patient Service** integrates with the **Billing Service** using a gRPC client.
+
+Whenever a **new patient is created** via the REST endpoint (`POST /api/patients`), the service:
+
+1. Persists the patient record.
+2. Uses `BillingServiceGrpcClient` to call `BillingService.CreateBillingAccount`.
+3. Receives a `BillingResponse` (containing `accountId` and `status`) and logs it.
+
+### Configuration Properties
+
+The gRPC client is configured using the following properties when running with Docker and a shared network (for example, `--network internal`), you can point the client to the `billing-service`:
+
+```properties
+billing.service.address=billing-service
+billing.service.grpc.port=9002
+```
+
+This allows the `patient-service` container to resolve and call the `billing-service` container via the Docker network using the container name.
+
+---
 
 ## 🐳 Docker Setup (IntelliJ)
 
@@ -152,6 +176,8 @@ The examples below assume you are using **IntelliJ IDEA** with Docker run config
   SPRING_DATASOURCE_USERNAME=admin_user
   SPRING_JPA_HIBERNATE_DDL_AUTO=update
   SPRING_SQL_INIT_MODE=always
+  BILLING_SERVICE_ADDRESS=billing-service
+  BILLING_SERVICE_GRPC_PORT=9002
 
 - Run options: --network internal
 ```
@@ -188,8 +214,9 @@ Create a second Docker run configuration for the database using the official Pos
 
 1. **Start the PostgreSQL container** (`patient-service-db`) first.
 2. Once the DB container is healthy and running, **start the patient-service container**.
+3. Ensure the **billing-service container** is also running (on the same Docker network) if you want gRPC billing integration to work.
 
-After both are running:
+After all containers are running:
 
 - API base URL in Docker: `http://localhost:4000/api/patients`
 - Swagger UI in Docker: `http://localhost:4000/swagger-ui.html`
@@ -257,6 +284,7 @@ At the **patient-service** level, future improvements may include:
 - Richer request validation with `jakarta.validation`
 - Standardized error handling / problem details
 - Extended OpenAPI metadata (tags, examples, versioning)
+- More robust error handling / retries around gRPC calls to Billing Service
 - Security integration with a dedicated auth/gateway layer
 - Improved logging, metrics, and tracing
 
