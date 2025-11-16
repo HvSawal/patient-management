@@ -9,7 +9,7 @@ service BillingService {
 }
 
 message BillingRequest {
-  string patientId = 1; //will be serialized and deserialized later
+  string patientId = 1;
   string name = 2;
   string email = 3;
 }
