@@ -11,6 +11,7 @@ It exposes a single gRPC endpoint for now, allowing the **Patient Service** (or 
 - `CreateBillingAccount` RPC to create a billing account for a patient
 - Strongly-typed contracts using **Protocol Buffers (proto3)**
 - Designed to be called from the `patient-service`
+- **Dockerized runtime** exposing both HTTP and gRPC ports
 
 ---
 
@@ -20,9 +21,9 @@ It exposes a single gRPC endpoint for now, allowing the **Patient Service** (or 
 - **RPC method:** `CreateBillingAccount`
 - **gRPC endpoint (local):** `localhost:9002`
 
-| RPC Method            | Request Type     | Response Type     | Description                          |
-|-----------------------|------------------|-------------------|--------------------------------------|
-| `CreateBillingAccount`| `BillingRequest` | `BillingResponse` | Creates a billing account for a user |
+| RPC Method             | Request Type     | Response Type     | Description                          |
+|------------------------|------------------|-------------------|--------------------------------------|
+| `CreateBillingAccount` | `BillingRequest` | `BillingResponse` | Creates a billing account for a user |
 
 ### Request: `BillingRequest`
 
@@ -65,7 +66,52 @@ The response will be a `BillingResponse` message that includes an `accountId` an
 
 ---
 
-## 🏃 Running the Service
+## 🐳 Docker Setup (IntelliJ)
+
+This service can be containerized using Docker.  
+The examples below assume you are using **IntelliJ IDEA** with Docker run configurations.
+
+> 💡 **IntelliJ Community Edition:**  
+> You need to install the **“Docker”** plugin from the JetBrains Marketplace to use Docker run configurations.
+
+### 1. Dockerfile Build Configuration (billing-service)
+
+Dockerfile (simplified description):
+
+- Multi-stage build using `maven:3.9.9-eclipse-temurin-21` as the **builder**
+- Runs `mvn dependency:go-offline -B` to prefetch dependencies
+- Builds the jar with `mvn clean package`
+- Uses `eclipse-temurin:21-jdk` as the **runtime** image
+- Copies the built jar to `/app/app.jar`
+- Exposes ports:
+    - `4001` – HTTP / management port
+    - `9002` – gRPC port
+- Entrypoint: `java -jar app.jar`
+
+**IntelliJ Docker run configuration:**
+
+```text
+- Type: Dockerfile
+- Dockerfile: this module’s `Dockerfile`
+- Image tag: billing-service:latest
+- Container name: billing-service
+- Bind ports:
+    4001:4001
+    9002:9002
+
+- Run options: --network internal
+```
+
+> The `--network internal` allows this container to communicate with other containers (for example, `patient-service`) on the same custom Docker network using their container names.
+
+After the container is running:
+
+- gRPC endpoint in Docker: `localhost:9002/BillingService/CreateBillingAccount`
+- HTTP port: `http://localhost:4001`
+
+---
+
+## 🏃 Running the Service Without Docker
 
 If you want to run the service directly on your machine:
 
