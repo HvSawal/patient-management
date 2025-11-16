@@ -4,9 +4,6 @@ import static io.grpc.MethodDescriptor.generateFullMethodName;
 
 /**
  */
-@javax.annotation.Generated(
-    value = "by gRPC proto compiler (version 1.68.1)",
-    comments = "Source: billing_service.proto")
 @io.grpc.stub.annotations.GrpcGenerated
 public final class BillingServiceGrpc {
 
@@ -58,6 +55,21 @@ public final class BillingServiceGrpc {
         }
       };
     return BillingServiceStub.newStub(factory, channel);
+  }
+
+  /**
+   * Creates a new blocking-style stub that supports all types of calls on the service
+   */
+  public static BillingServiceBlockingV2Stub newBlockingV2Stub(
+      io.grpc.Channel channel) {
+    io.grpc.stub.AbstractStub.StubFactory<BillingServiceBlockingV2Stub> factory =
+      new io.grpc.stub.AbstractStub.StubFactory<BillingServiceBlockingV2Stub>() {
+        @java.lang.Override
+        public BillingServiceBlockingV2Stub newStub(io.grpc.Channel channel, io.grpc.CallOptions callOptions) {
+          return new BillingServiceBlockingV2Stub(channel, callOptions);
+        }
+      };
+    return BillingServiceBlockingV2Stub.newStub(factory, channel);
   }
 
   /**
@@ -140,6 +152,30 @@ public final class BillingServiceGrpc {
 
   /**
    * A stub to allow clients to do synchronous rpc calls to service BillingService.
+   */
+  public static final class BillingServiceBlockingV2Stub
+      extends io.grpc.stub.AbstractBlockingStub<BillingServiceBlockingV2Stub> {
+    private BillingServiceBlockingV2Stub(
+        io.grpc.Channel channel, io.grpc.CallOptions callOptions) {
+      super(channel, callOptions);
+    }
+
+    @java.lang.Override
+    protected BillingServiceBlockingV2Stub build(
+        io.grpc.Channel channel, io.grpc.CallOptions callOptions) {
+      return new BillingServiceBlockingV2Stub(channel, callOptions);
+    }
+
+    /**
+     */
+    public billing.BillingResponse createBillingAccount(billing.BillingRequest request) throws io.grpc.StatusException {
+      return io.grpc.stub.ClientCalls.blockingV2UnaryCall(
+          getChannel(), getCreateBillingAccountMethod(), getCallOptions(), request);
+    }
+  }
+
+  /**
+   * A stub to allow clients to do limited synchronous rpc calls to service BillingService.
    */
   public static final class BillingServiceBlockingStub
       extends io.grpc.stub.AbstractBlockingStub<BillingServiceBlockingStub> {

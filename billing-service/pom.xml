@@ -39,17 +39,17 @@
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty-shaded</artifactId>
-            <version>1.69.0</version>
+            <version>1.75.0</version>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-protobuf</artifactId>
-            <version>1.69.0</version>
+            <version>1.75.0</version>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-stub</artifactId>
-            <version>1.69.0</version>
+            <version>1.75.0</version>
         </dependency>
         <dependency> <!-- necessary for Java 9+ -->
             <groupId>org.apache.tomcat</groupId>
@@ -86,7 +86,7 @@
             <extension>
                 <groupId>kr.motd.maven</groupId>
                 <artifactId>os-maven-plugin</artifactId>
-                <version>1.7.0</version>
+                <version>1.7.1</version>
             </extension>
         </extensions>
 		<plugins>
@@ -120,9 +120,9 @@
                 <artifactId>protobuf-maven-plugin</artifactId>
                 <version>0.6.1</version>
                 <configuration>
-                    <protocArtifact>com.google.protobuf:protoc:3.25.5:exe:${os.detected.classifier}</protocArtifact>
+                    <protocArtifact>com.google.protobuf:protoc:4.29.1:exe:${os.detected.classifier}</protocArtifact>
                     <pluginId>grpc-java</pluginId>
-                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.68.1:exe:${os.detected.classifier}</pluginArtifact>
+                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.75.0:exe:${os.detected.classifier}</pluginArtifact>
                 </configuration>
                 <executions>
                     <execution>
