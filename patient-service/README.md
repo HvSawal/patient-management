@@ -15,6 +15,8 @@ It currently exposes **CRUD operations** for patient entities and acts as the fo
   - Delete patients by ID
 - **Integration with Billing Service via gRPC:**
   - On patient creation, a gRPC call is made to `billing-service` to create a corresponding billing account.
+- **Event publishing via Kafka (Protobuf):**
+    - On patient creation, a `PatientEvent` message is published to a Kafka topic using a Protobuf-encoded payload.
 - **Interactive API documentation via Swagger / OpenAPI**
 - **Dockerized runtime with PostgreSQL database**
 
@@ -131,7 +133,7 @@ Whenever a **new patient is created** via the REST endpoint (`POST /api/patients
 2. Uses `BillingServiceGrpcClient` to call `BillingService.CreateBillingAccount`.
 3. Receives a `BillingResponse` (containing `accountId` and `status`) and logs it.
 
-### Configuration Properties
+### Configuration Properties (gRPC)
 
 The gRPC client is configured using the following properties when running with Docker and a shared network (for example, `--network internal`), you can point the client to the `billing-service`:
 
@@ -143,10 +145,37 @@ billing.service.grpc.port=9002
 This allows the `patient-service` container to resolve and call the `billing-service` container via the Docker network using the container name.
 
 ---
+## 📡 Kafka Event Publishing (Protobuf)
+
+The **Patient Service** also publishes a Kafka event whenever a new patient is created.  
+The payload is defined as a **Protobuf message** (`patient_service.proto`).
+
+A typical PatientEvent will contain:
+
+- `patientId` – the ID of the created patient
+- `name` – the patient’s name
+- `email` – the patient’s email
+- `event_type` – the type of event (for example, `CREATED`,`UPDATED`)
+
+### Kafka Producer Configuration
+
+Kafka producer serialization is configured via `application.properties`:
+
+```properties
+spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer
+spring.kafka.producer.value-serializer=org.apache.kafka.common.serialization.ByteArraySerializer
+```
+
+- The **key** is serialized as a `String`.
+- The **value** is serialized as raw bytes (the Protobuf-encoded `PatientEvent`).
+
+> The producer runs inside the `patient-service` container and connects to the Kafka broker running on the same Docker network.
+
+---
 
 ## 🐳 Docker Setup (IntelliJ)
 
-This project includes a Dockerized setup for the **patient-service** and a **PostgreSQL** database.  
+This project includes a Dockerized setup for the **patient-service**, a **PostgreSQL** database, **Kafka**, and **Kafka UI**.  
 The examples below assume you are using **IntelliJ IDEA** with Docker run configurations.
 
 > 💡 **IntelliJ Community Edition:**  
@@ -182,7 +211,11 @@ The examples below assume you are using **IntelliJ IDEA** with Docker run config
 - Run options: --network internal
 ```
 
-> The `--network internal` ensures the application container can reach the database container via the hostname `patient-service-db`.
+> The `--network internal` ensures the application container can reach:
+> - The database container via the hostname `patient-service-db`
+> - The billing-service container via the hostname `billing-service` 
+> - The Kafka broker container via the hostname `kafka`
+> - The Kafka-UI container via the `kafka-ui`
 
 ### 2. PostgreSQL Database Configuration (patient-service-db)
 
@@ -210,16 +243,73 @@ Create a second Docker run configuration for the database using the official Pos
 
 > Both containers (`patient-service` and `patient-service-db`) share the same `internal` Docker network so that the application can use `jdbc:postgresql://patient-service-db:5432/db` as its datasource URL.
 
-### 3. Startup Order
+### 3. Kafka Broker Configuration (kafka)
 
-1. **Start the PostgreSQL container** (`patient-service-db`) first.
-2. Once the DB container is healthy and running, **start the patient-service container**.
-3. Ensure the **billing-service container** is also running (on the same Docker network) if you want gRPC billing integration to work.
+Create a Docker run configuration for **Apache Kafka** using the `apache/kafka:latest` image.
 
+**IntelliJ Docker run configuration:**
+```
+- Type: Image (or Docker Image)
+- Image ID or name: `apache/kafka:latest`
+- Container name: `kafka`
+- Bind ports:
+  9092:9092
+  9094:9094
+
+- Environment variables:
+  KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+  KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+  KAFKA_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+  KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+  KAFKA_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+  KAFKA_NODE_ID=0
+  KAFKA_PROCESS_ROLES=controller,broker
+
+- Run options: --network internal
+```
+
+> The `kafka` container will be reachable from `patient-service` via `kafka:9092` on the `internal` Docker network.  
+> From your host machine, you can connect using `localhost:9094` (EXTERNAL listener).
+
+### 4. Kafka UI Configuration (kafka-ui)
+
+To make it easier to inspect topics, messages, and clusters, a **Kafka UI** container is also used.
+
+**IntelliJ Docker run configuration:**
+```
+- Type: Image (or Docker Image)
+- Image ID or name: `provectuslabs/kafka-ui:latest`
+- Container name: `kafka-ui`
+- Bind ports:
+  8080:8080
+
+- Environment variables:
+  DYNAMIC_CONFIG_ENABLED=true
+  KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+  KAFKA_CLUSTERS_0_NAME=local
+
+- Run options: --network internal
+```
+
+> With this configuration, you can access **Kafka UI** at `http://localhost:8080`.  
+> From there, you can:
+> - View and manage clusters
+> - Create new topics
+> - Produce messages
+> - Consume and inspect messages on a topic
+
+### 5. Startup Order
+
+1. **Start the PostgreSQL container** (`patient-service-db`).
+2. **Start the Kafka broker container** (`kafka`).
+3. **Start the Kafka UI container** (`kafka-ui`).
+4. **Start the patient-service container** (`patient-service`).
+5. Ensure the **billing-service container** is also running (on the same Docker network) if you want gRPC billing integration to work.
 After all containers are running:
 
 - API base URL in Docker: `http://localhost:4000/api/patients`
 - Swagger UI in Docker: `http://localhost:4000/swagger-ui.html`
+- Kafka UI: `http://localhost:8080` (to browse topics and messages)
 
 ---
 
@@ -273,6 +363,7 @@ Planned enhancements:
 
 - REST-level integration tests
 - Database-backed integration tests (e.g., PostgreSQL via Docker)
+- Kafka integration tests (producer/consumer verification)
 - Contract tests once other services (billing, auth, etc.) are added
 
 ---
@@ -285,6 +376,7 @@ At the **patient-service** level, future improvements may include:
 - Standardized error handling / problem details
 - Extended OpenAPI metadata (tags, examples, versioning)
 - More robust error handling / retries around gRPC calls to Billing Service
+- Additional Kafka events (update/delete events, audit logs)
 - Security integration with a dedicated auth/gateway layer
 - Improved logging, metrics, and tracing
 
