@@ -5,7 +5,7 @@ spring:
   cloud:
     gateway:
       routes:
-        # Route for /api/patients/** to patient-service
+        # Route for /auth/** to auth-service
         - id: auth-service-route
           uri: http://auth-service:4005
           predicates:
@@ -29,3 +29,11 @@ spring:
             - Path=/api-docs/patients
           filters:
             - RewritePath=/api-docs/patients,/v3/api-docs
+
+        # Route for /api-docs/auth to auth-service /v3/api-docs
+        - id: api-docs-auth-route
+          uri: http://auth-service:4005
+          predicates:
+            - Path=/api-docs/auth
+          filters:
+            - RewritePath=/api-docs/auth,/v3/api-docs
