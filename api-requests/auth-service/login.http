@@ -1,0 +1,11 @@
+### POST request - Login to retrieve a token
+POST http://localhost:4005/login
+Content-type: application/json
+
+{
+    "email" : "testuser@test.com",
+    "password" : "password123"
+}
+
+> {% client.global.set("token", response.body.token) %}
+###
