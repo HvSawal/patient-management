@@ -22,10 +22,17 @@ public class KafkaProducer {
         //TODO
         // Add classes for other events for sendEvent
 
-        // Test of createPatient event
         PatientEvent event = patientCreatedEvent(patient);
+        byte[] eventBytes = event.toByteArray();
+        String key = patient.getId().toString(); // Use patient ID as key
+
+        log.info("🔄 Sending PatientCreated event: [PatientId={}, Key={}, Size={} bytes]",
+                event.getPatientId(), key, eventBytes.length);
+
         try {
             kafkaTemplate.send(PATIENT_TOPIC, event.toByteArray());
+            log.info("✅ Message sent successfully: [PatientId={}]",
+                    event.getPatientId());
         } catch (Exception e) {
             log.error("Error sending PatientCreated event : {}", event);
         }
