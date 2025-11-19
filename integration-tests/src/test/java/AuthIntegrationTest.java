@@ -3,8 +3,8 @@ import io.restassured.response.Response;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static util.IntegrationTestHelper.postJson;
 
 public class AuthIntegrationTest {
 
@@ -15,7 +15,6 @@ public class AuthIntegrationTest {
         RestAssured.baseURI = BASE_URI;
     }
 
-    // TODO - testing logic for restassured
     // 1. Arrange
     // 2. Act
     // 3. Assert
@@ -29,17 +28,8 @@ public class AuthIntegrationTest {
                         "password" : "password123"
                     }
                 """;
-
-        Response response = given()
-                .contentType("application/json")
-                .body(loginPayload)
-                .when()
-                .post("/auth/login")
-                .then()
-                .statusCode(200)
-                .body("token", notNullValue())
-                .extract().response();
-
+        Response response = postJson("/auth/login", loginPayload, 200);
+        assertNotNull(response.jsonPath().getString("token"), "Token not generated!");
         System.out.println("Generated Token : " + response.jsonPath().getString("token"));
     }
 
@@ -53,13 +43,7 @@ public class AuthIntegrationTest {
                     }
                 """;
 
-        given()
-                .contentType("application/json")
-                .body(loginPayload)
-                .when()
-                .post("/auth/login")
-                .then()
-                .statusCode(401);
+        postJson("/auth/login", loginPayload, 401);
     }
 
 }
